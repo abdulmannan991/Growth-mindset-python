@@ -46,7 +46,7 @@ if files:
                 new_name = file.name.replace(ext, "csv")
 
             else:
-                df.to_excel(output, index=False, engine='openpyxl')
+                df.to_excel(output, index=False, )
                 mine = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 new_name = file.name.replace(ext, "xlsx")
             
