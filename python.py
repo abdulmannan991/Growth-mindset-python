@@ -1,6 +1,3 @@
-# Suppress unused import warning since openpyxl is required for Excel file handling
-# even though not directly referenced
-# openpyxl is used internally by pandas for Excel operations
 
 import streamlit as st
 import pandas as pd
