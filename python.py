@@ -2,62 +2,70 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-st.set_page_config(page_title="File Converter", layout="wide")
+# Page Configuration
+st.set_page_config(page_title="📂 File Converter", layout="wide", page_icon="🔄")
+
+# Sidebar for file upload
+st.sidebar.title("🔼 Upload Files")
+files = st.sidebar.file_uploader("Upload CSV or Excel files", type=["csv", "xlsx"], accept_multiple_files=True)
+
+# Main Title
 st.title("📂 File Converter")
-st.write("Upload CSV or Excel files and convert them easily.")
+st.write("Easily convert CSV or Excel files with a **clean UI experience**! 🚀")
 
-# Upload multiple files
-files = st.file_uploader("Upload CSV or Excel files", type=["csv", "xlsx"], accept_multiple_files=True)
-
+# Process Uploaded Files
 if files:
     for file in files:
         ext = file.name.split(".")[-1]
         df = pd.read_csv(file) if ext == "csv" else pd.read_excel(file)
 
-        st.subheader(f"📄 Preview of {file.name}")
-        st.dataframe(df.head())
+        with st.expander(f"📄 Preview - {file.name}", expanded=True):
+            st.dataframe(df.head(10))
 
-        # Remove Duplicates
-        if st.checkbox(f"🗑 Remove Duplicates - {file.name}"):
-            df = df.drop_duplicates()
-            st.success("✅ Duplicates removed successfully! ")
-            st.dataframe(df.head())
+        col1, col2 = st.columns(2)
 
-        # Fill Missing Values
-        if st.checkbox(f"🛠 Fill Missing Values - {file.name}"):
-            df.fillna(df.select_dtypes(include=["number"]).mean(), inplace=True)
-            st.success("✅ Missing values filled with mean.")
-            st.dataframe(df.head())
+        with col1:
+            if st.checkbox(f"🗑 Remove Duplicates - {file.name}"):
+                df = df.drop_duplicates()
+                st.success("✅ Duplicates removed successfully! ")
+                st.dataframe(df.head(5))
 
-        # Select Columns
+        with col2:
+            if st.checkbox(f"🛠 Fill Missing Values - {file.name}"):
+                df.fillna(df.select_dtypes(include=["number"]).mean(), inplace=True)
+                st.success("✅ Missing values filled with mean.")
+                st.dataframe(df.head(5))
+
+        # Column Selection
         selected_columns = st.multiselect(f"🔍 Select Columns to Display - {file.name}", df.columns, default=df.columns)
         df = df[selected_columns]
-        st.dataframe(df.head())
+        st.dataframe(df.head(5))
 
-        # Show Chart
+        # Show Chart Option
         if st.checkbox(f"📊 Show Chart - {file.name}") and not df.select_dtypes(include="number").empty:
             st.bar_chart(df.select_dtypes(include="number").iloc[:, :2])
 
-        # File Format Selection
-        format_choice = st.radio(f"🔄 Convert {file.name} to:", ["CSV", "Excel"], key=file.name)
+        # Format Choice
+        st.divider()
+        format_choice = st.radio(f"🔄 Convert {file.name} to:", ["CSV", "Excel"], key=file.name, horizontal=True)
 
         # Download Button
-        if st.button(f"📥 Download {file.name} as {format_choice}"):
-            with st.spinner("Processing... ⏳"):
-                output = BytesIO()
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            if st.button(f"📥 Download {file.name} as {format_choice}", use_container_width=True):
+                with st.spinner("⚡ Processing... Please wait!"):
+                    output = BytesIO()
 
-                if format_choice == "CSV":
-                    df.to_csv(output, index=False)
-                    mime_type = "text/csv"
-                    new_name = file.name.replace(ext, "csv")
+                    if format_choice == "CSV":
+                        df.to_csv(output, index=False)
+                        mime_type = "text/csv"
+                        new_name = file.name.replace(ext, "csv")
 
-                else:  # Excel
-                    df.to_excel(output, index=False, engine='openpyxl')
-                    mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    new_name = file.name.replace(ext, "xlsx")
+                    else:  # Excel
+                        df.to_excel(output, index=False, engine='openpyxl')
+                        mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        new_name = file.name.replace(ext, "xlsx")
 
-                output.seek(0)
-                st.download_button("⬇️ Download File", file_name=new_name, data=output, mime=mime_type)
-
-        st.success("✅ Processing Complete!")
-
+                    output.seek(0)
+                    st.download_button("⬇️ Download File", file_name=new_name, data=output, mime=mime_type, use_container_width=True)
+                    st.success("🎉 File is ready for download!")
